@@ -1,29 +1,29 @@
-import "readers/stream_reader.dart";
 import "actor.dart";
-import "math/mat2d.dart";
-import "math/vec2d.dart";
 import "actor_component.dart";
 import "actor_constraint.dart";
+import "math/mat2d.dart";
+import "math/vec2d.dart";
+import "readers/stream_reader.dart";
 
 class ActorNode extends ActorComponent {
-  List<ActorNode> _children;
+  List<ActorNode>? _children;
   //List<ActorNode> m_Dependents;
-  Mat2D _transform = Mat2D();
-  Mat2D _worldTransform = Mat2D();
+  final Mat2D _transform = Mat2D();
+  final Mat2D _worldTransform = Mat2D();
 
-  Vec2D _translation = Vec2D();
+  final Vec2D _translation = Vec2D();
   double _rotation = 0.0;
-  Vec2D _scale = Vec2D.fromValues(1.0, 1.0);
+  final Vec2D _scale = Vec2D.fromValues(1.0, 1.0);
   double _opacity = 1.0;
   double renderOpacity = 1.0;
 
   bool _overrideWorldTransform = false;
-  bool _isCollapsedVisibility = false;
+  bool? _isCollapsedVisibility = false;
 
   bool _renderCollapsed = false;
 
-  List<ActorConstraint> _constraints;
-  List<ActorConstraint> _peerConstraints;
+  List<ActorConstraint>? _constraints;
+  List<ActorConstraint>? _peerConstraints;
 
   static const int TransformDirty = 1 << 0;
   static const int WorldTransformDirty = 1 << 1;
@@ -35,11 +35,11 @@ class ActorNode extends ActorComponent {
     return _transform;
   }
 
-  Mat2D get worldTransformOverride {
+  Mat2D? get worldTransformOverride {
     return _overrideWorldTransform ? _worldTransform : null;
   }
 
-  set worldTransformOverride(Mat2D value) {
+  set worldTransformOverride(Mat2D? value) {
     if (value == null) {
       _overrideWorldTransform = false;
     } else {
@@ -62,11 +62,11 @@ class ActorNode extends ActorComponent {
     return _translation[0];
   }
 
-  set x(double value) {
+  set x(double? value) {
     if (_translation[0] == value) {
       return;
     }
-    _translation[0] = value;
+    _translation[0] = value!;
     markTransformDirty();
   }
 
@@ -104,11 +104,11 @@ class ActorNode extends ActorComponent {
   }
 
   set scale(Vec2D s) {
-    if (Vec2D.exactEquals(this._scale, s)) {
+    if (Vec2D.exactEquals(_scale, s)) {
       return;
     }
 
-    Vec2D.copy(this._scale, s);
+    Vec2D.copy(_scale, s);
     markTransformDirty();
   }
 
@@ -128,11 +128,11 @@ class ActorNode extends ActorComponent {
     return _scale[1];
   }
 
-  set scaleY(double value) {
+  set scaleY(double? value) {
     if (_scale[1] == value) {
       return;
     }
-    _scale[1] = value;
+    _scale[1] = value!;
     markTransformDirty();
   }
 
@@ -152,11 +152,11 @@ class ActorNode extends ActorComponent {
     return _renderCollapsed;
   }
 
-  bool get collapsedVisibility {
+  bool? get collapsedVisibility {
     return _isCollapsedVisibility;
   }
 
-  set collapsedVisibility(bool value) {
+  set collapsedVisibility(bool? value) {
     if (_isCollapsedVisibility != value) {
       _isCollapsedVisibility = value;
       markTransformDirty();
@@ -168,10 +168,10 @@ class ActorNode extends ActorComponent {
       // Still loading?
       return;
     }
-    if (!actor.addDirt(this, TransformDirty, false)) {
+    if (!actor!.addDirt(this, TransformDirty, false)) {
       return;
     }
-    actor.addDirt(this, WorldTransformDirty, true);
+    actor!.addDirt(this, WorldTransformDirty, true);
   }
 
   void updateTransform() {
@@ -191,20 +191,18 @@ class ActorNode extends ActorComponent {
     renderOpacity = _opacity;
 
     if (parent != null) {
-      _renderCollapsed = _isCollapsedVisibility || parent._renderCollapsed;
-      renderOpacity *= parent.renderOpacity;
+      _renderCollapsed = _isCollapsedVisibility! || parent!._renderCollapsed;
+      renderOpacity *= parent!.renderOpacity;
       if (!_overrideWorldTransform) {
-        Mat2D.multiply(_worldTransform, parent._worldTransform, _transform);
+        Mat2D.multiply(_worldTransform, parent!._worldTransform, _transform);
       }
     } else {
       Mat2D.copy(_worldTransform, _transform);
     }
   }
 
-  static ActorNode read(Actor actor, StreamReader reader, ActorNode node) {
-    if (node == null) {
-      node = ActorNode();
-    }
+  static ActorNode read(Actor actor, StreamReader reader, ActorNode? node) {
+    node ??= ActorNode();
     ActorComponent.read(actor, reader, node);
     reader.readFloat32ArrayOffset(
         node._translation.values, 2, 0, "translation");
@@ -212,7 +210,7 @@ class ActorNode extends ActorComponent {
     reader.readFloat32ArrayOffset(node._scale.values, 2, 0, "scale");
     node._opacity = reader.readFloat32("opacity");
 
-    if (actor.version >= 13) {
+    if (actor.version! >= 13) {
       node._isCollapsedVisibility = reader.readBool("isCollapsed");
     }
 
@@ -221,19 +219,18 @@ class ActorNode extends ActorComponent {
 
   void addChild(ActorNode node) {
     if (node.parent != null) {
-      node.parent._children.remove(node);
+      node.parent!._children!.remove(node);
     }
     node.parent = this;
-    if (_children == null) {
-      _children = List<ActorNode>();
-    }
-    _children.add(node);
+    _children ??= [];
+    _children!.add(node);
   }
 
-  List<ActorNode> get children {
+  List<ActorNode>? get children {
     return _children;
   }
 
+  @override
   ActorComponent makeInstance(Actor resetActor) {
     ActorNode instanceNode = ActorNode();
     instanceNode.copyNode(this, resetActor);
@@ -252,27 +249,24 @@ class ActorNode extends ActorComponent {
     _overrideWorldTransform = node._overrideWorldTransform;
   }
 
+  @override
   void onDirty(int dirt) {}
 
   bool addConstraint(ActorConstraint constraint) {
-    if (_constraints == null) {
-      _constraints = List<ActorConstraint>();
-    }
-    if (_constraints.contains(constraint)) {
+    _constraints ??= [];
+    if (_constraints!.contains(constraint)) {
       return false;
     }
-    _constraints.add(constraint);
+    _constraints!.add(constraint);
     return true;
   }
 
   bool addPeerConstraint(ActorConstraint constraint) {
-    if (_peerConstraints == null) {
-      _peerConstraints = List<ActorConstraint>();
-    }
-    if (_peerConstraints.contains(constraint)) {
+    _peerConstraints ??= [];
+    if (_peerConstraints!.contains(constraint)) {
       return false;
     }
-    _peerConstraints.add(constraint);
+    _peerConstraints!.add(constraint);
     return true;
   }
 
@@ -281,9 +275,10 @@ class ActorNode extends ActorComponent {
           ? _peerConstraints
           : _peerConstraints == null
               ? _constraints
-              : _constraints + _peerConstraints) ??
+              : _constraints! + _peerConstraints!) ??
       <ActorConstraint>[];
 
+  @override
   void update(int dirt) {
     if ((dirt & TransformDirty) == TransformDirty) {
       updateTransform();
@@ -291,8 +286,8 @@ class ActorNode extends ActorComponent {
     if ((dirt & WorldTransformDirty) == WorldTransformDirty) {
       updateWorldTransform();
       if (_constraints != null) {
-        for (ActorConstraint constraint in _constraints) {
-          if (constraint.isEnabled) {
+        for (final ActorConstraint constraint in _constraints!) {
+          if (constraint.isEnabled!) {
             constraint.constrain(this);
           }
         }
@@ -300,6 +295,7 @@ class ActorNode extends ActorComponent {
     }
   }
 
+  @override
   void completeResolve() {
     // Nothing to complete for actornode.
   }

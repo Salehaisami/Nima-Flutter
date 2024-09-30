@@ -3,9 +3,9 @@ import "dart:typed_data";
 import "vec2d.dart";
 
 class AABB {
-  Float32List _buffer;
+  Float32List? _buffer;
 
-  Float32List get values {
+  Float32List? get values {
     return _buffer;
   }
 
@@ -14,7 +14,7 @@ class AABB {
   }
 
   AABB.clone(AABB a) {
-    _buffer = Float32List.fromList(a.values);
+    _buffer = Float32List.fromList(a.values!);
   }
 
   AABB.fromValues(double a, double b, double c, double d) {
@@ -22,11 +22,11 @@ class AABB {
   }
 
   double operator [](int idx) {
-    return _buffer[idx];
+    return _buffer![idx];
   }
 
   void operator []=(int idx, double v) {
-    _buffer[idx] = v;
+    _buffer![idx] = v;
   }
 
   static AABB copy(AABB out, AABB a) {

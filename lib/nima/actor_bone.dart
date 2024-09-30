@@ -6,10 +6,10 @@ import "jelly_component.dart";
 import "readers/stream_reader.dart";
 
 class ActorBone extends ActorBoneBase {
-  ActorBone _firstBone;
-  JellyComponent jelly;
+  ActorBone? _firstBone;
+  JellyComponent? jelly;
 
-  ActorBone get firstBone {
+  ActorBone? get firstBone {
     return _firstBone;
   }
 
@@ -26,7 +26,7 @@ class ActorBone extends ActorBoneBase {
     if (children == null) {
       return;
     }
-    for (final ActorNode node in children) {
+    for (final ActorNode node in children!) {
       if (node is ActorBone) {
         _firstBone = node;
         return;
@@ -34,7 +34,7 @@ class ActorBone extends ActorBoneBase {
     }
   }
 
-  static ActorBone read(Actor actor, StreamReader reader, ActorBone node) {
+  static ActorBone read(Actor actor, StreamReader reader, ActorBone? node) {
     node ??= ActorBone();
     ActorBoneBase.read(actor, reader, node);
     return node;

@@ -5,19 +5,19 @@ import "stream_reader.dart";
 
 abstract class JSONReader implements StreamReader {
   @override
-  int blockType;
+  int? blockType;
 
   dynamic _readObject;
-  ListQueue _context;
+  ListQueue? _context;
 
   JSONReader(Map object) {
     _readObject = object["container"];
     _context = ListQueue<dynamic>();
-    _context.addFirst(_readObject);
+    _context!.addFirst(_readObject);
   }
 
   dynamic readProp(String label) {
-    dynamic head = _context.first;
+    dynamic head = _context!.first;
     if (head is Map) {
       dynamic prop = head[label];
       head.remove(label);
@@ -42,24 +42,24 @@ abstract class JSONReader implements StreamReader {
 
   @override
   void readFloat32ArrayOffset(
-      Float32List ar, int length, int offset, String label) {
-    _readArrayOffset(ar, length, offset, label);
+      Float32List? ar, int length, int offset, String label) {
+    _readArrayOffset(ar!, length, offset, label);
   }
 
   void _readArrayOffset(List ar, int length, int offset, String label) {
-    List array = readProp(label) as List;
+    List? array = readProp(label) as List?;
     int end = offset + length;
     num listElement = ar.first as num;
     for (int i = offset; i < end; i++) {
-      num val = array[i] as num;
+      num val = array![i] as num;
       ar[i] = listElement is double ? val.toDouble() : val.toInt();
     }
   }
 
   void _readArray(List ar, String label) {
-    List array = readProp(label) as List;
+    List? array = readProp(label) as List?;
     for (int i = 0; i < ar.length; i++) {
-      ar[i] = array[i];
+      ar[i] = array![i];
     }
   }
 
@@ -70,8 +70,8 @@ abstract class JSONReader implements StreamReader {
   }
 
   @override
-  int readUint8(String label) {
-    return readProp(label) as int;
+  int? readUint8(String label) {
+    return readProp(label) as int?;
   }
 
   @override
@@ -81,17 +81,17 @@ abstract class JSONReader implements StreamReader {
 
   @override
   bool isEOF() {
-    return _context.length <= 1 && _readObject.length == 0;
+    return _context!.length <= 1 && _readObject.length == 0;
   }
 
   @override
-  int readInt8(String label) {
-    return readProp(label) as int;
+  int? readInt8(String label) {
+    return readProp(label) as int?;
   }
 
   @override
-  int readUint16(String label) {
-    return readProp(label) as int;
+  int? readUint16(String label) {
+    return readProp(label) as int?;
   }
 
   @override
@@ -100,13 +100,13 @@ abstract class JSONReader implements StreamReader {
   }
 
   @override
-  void readUint16Array(Uint16List ar, int length, int offset, String label) {
-    return _readArrayOffset(ar, length, offset, label);
+  void readUint16Array(Uint16List? ar, int length, int offset, String label) {
+    return _readArrayOffset(ar!, length, offset, label);
   }
 
   @override
-  int readInt16(String label) {
-    return readProp(label) as int;
+  int? readInt16(String label) {
+    return readProp(label) as int?;
   }
 
   @override
@@ -120,28 +120,28 @@ abstract class JSONReader implements StreamReader {
   }
 
   @override
-  int readUint32(String label) {
-    return readProp(label) as int;
+  int? readUint32(String label) {
+    return readProp(label) as int?;
   }
 
   @override
-  int readInt32(String label) {
-    return readProp(label) as int;
+  int? readInt32(String label) {
+    return readProp(label) as int?;
   }
 
   @override
-  int readVersion() {
-    return readProp("version") as int;
+  int? readVersion() {
+    return readProp("version") as int?;
   }
 
   @override
-  String readString(String label) {
-    return readProp(label) as String;
+  String? readString(String label) {
+    return readProp(label) as String?;
   }
 
   @override
-  bool readBool(String label) {
-    return readProp(label) as bool;
+  bool? readBool(String label) {
+    return readProp(label) as bool?;
   }
 
   // @hasOffset flag is needed for older (up until version 14) files.
@@ -156,28 +156,28 @@ abstract class JSONReader implements StreamReader {
   @override
   void openArray(String label) {
     dynamic array = readProp(label);
-    _context.addFirst(array);
+    _context!.addFirst(array);
   }
 
   @override
   void closeArray() {
-    _context.removeFirst();
+    _context!.removeFirst();
   }
 
   @override
   void openObject(String label) {
     dynamic o = readProp(label);
-    _context.addFirst(o);
+    _context!.addFirst(o);
   }
 
   @override
   void closeObject() {
-    _context.removeFirst();
+    _context!.removeFirst();
   }
 
-  int _readLength() => (_context.first as List)
+  int _readLength() => (_context!.first as List)
       .length; // Maps and Lists both have a `length` property.
   @override
   String get containerType => "json";
-  ListQueue get context => _context;
+  ListQueue? get context => _context;
 }

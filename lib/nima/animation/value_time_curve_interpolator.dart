@@ -5,21 +5,21 @@ import "keyframe.dart";
 
 // AE style curve interpolation
 class ValueTimeCurveInterpolator extends KeyFrameInterpolator {
-  double _inFactor;
-  double _inValue;
-  double _outFactor;
-  double _outValue;
+  double? _inFactor;
+  double? _inValue;
+  double? _outFactor;
+  double? _outValue;
 
-  double get inFactor => _inFactor;
-  double get inValue => _inValue;
-  double get outFactor => _outFactor;
-  double get outValue => _outValue;
+  double? get inFactor => _inFactor;
+  double? get inValue => _inValue;
+  double? get outFactor => _outFactor;
+  double? get outValue => _outValue;
   ValueTimeCurveInterpolator();
   ValueTimeCurveInterpolator.fromValues(
       this._inFactor, this._inValue, this._outFactor, this._outValue);
 
   @override
-  bool setNextFrame(KeyFrameWithInterpolation frame, KeyFrame nextFrame) {
+  bool setNextFrame(KeyFrameWithInterpolation frame, KeyFrame? nextFrame) {
     // This frame is a hold, return false to remove the interpolator.
     // We store it in the first place as when it gets called as the
     // nextFrame parameter (in a previous call) we still read out the
@@ -31,43 +31,43 @@ class ValueTimeCurveInterpolator extends KeyFrameInterpolator {
 
     // Just a sanity check really, both keyframes need to be numeric.
     KeyFrameNumeric ourFrame = frame as KeyFrameNumeric;
-    KeyFrameNumeric next = nextFrame as KeyFrameNumeric;
-    if (ourFrame == null || next == null) {
+    KeyFrameNumeric? next = nextFrame as KeyFrameNumeric?;
+    if (next == null) {
       return false;
     }
 
     // We are not gauranteed to have a next interpolator
     // (usually when the next keyframe is linear).
-    ValueTimeCurveInterpolator nextInterpolator;
+    ValueTimeCurveInterpolator? nextInterpolator;
 
-    double timeRange = next.time - ourFrame.time;
-    double outTime = ourFrame.time + timeRange * _outFactor;
+    double timeRange = next.time! - ourFrame.time!;
+    double outTime = ourFrame.time! + timeRange * _outFactor!;
 
-    double nextInValue = 0.0;
-    double nextInFactor = 0.0;
+    double? nextInValue = 0.0;
+    double? nextInFactor = 0.0;
 
     // Get the invalue and infactor from the next interpolator
     // (this is where hold keyframes get their interpolator values
     //  processed too).
     if (next.interpolator is ValueTimeCurveInterpolator) {
-      nextInterpolator = next.interpolator as ValueTimeCurveInterpolator;
-      nextInValue = nextInterpolator._inValue;
+      nextInterpolator = next.interpolator as ValueTimeCurveInterpolator?;
+      nextInValue = nextInterpolator!._inValue;
       nextInFactor = nextInterpolator._inFactor;
     } else {
       // Happens when next is linear.
       nextInValue = next.value;
     }
 
-    double inTime = next.time - timeRange * nextInFactor;
+    double inTime = next.time! - timeRange * nextInFactor!;
 
     // Finally we can generate the curve.
-    initializeCurve(ourFrame.time, ourFrame.value, outTime, _outValue, inTime,
-        nextInValue, next.time, next.value);
+    initializeCurve(ourFrame.time, ourFrame.value!, outTime, _outValue!, inTime,
+        nextInValue!, next.time, next.value!);
     return true;
   }
 
-  static ValueTimeCurveInterpolator read(
-      StreamReader reader, InterpolationTypes type) {
+  static ValueTimeCurveInterpolator? read(
+      StreamReader reader, InterpolationTypes? type) {
     ValueTimeCurveInterpolator vtci = ValueTimeCurveInterpolator();
     switch (type) {
       case InterpolationTypes.Mirrored:
@@ -94,27 +94,27 @@ class ValueTimeCurveInterpolator extends KeyFrameInterpolator {
 
   static const double EPSILON = double.minPositive;
 
-  double _x0;
-  double _y0;
+  double? _x0;
+  double? _y0;
 
-  double _x1;
-  double _y1;
+  late double _x1;
+  double? _y1;
 
-  double _x2;
-  double _y2;
+  late double _x2;
+  double? _y2;
 
-  double _x3;
-  double _y3;
+  double? _x3;
+  double? _y3;
 
-  double _e;
-  double _f;
-  double _g;
-  double _h;
+  late double _e;
+  late double _f;
+  late double _g;
+  late double _h;
 
   static const double DEBUG_VALUE = 7.325263977050781;
 
-  void initializeCurve(double x0, double y0, double x1, double y1, double x2,
-      double y2, double x3, double y3) {
+  void initializeCurve(double? x0, double y0, double x1, double y1, double x2,
+      double y2, double? x3, double y3) {
     //ourFrame.time, ourFrame.value, outTime, _outValue, inTime, nextInValue, next.time, next.value
     _x0 = x0;
     _y0 = y0;
@@ -227,10 +227,10 @@ class ValueTimeCurveInterpolator extends KeyFrameInterpolator {
   }
 
   double get(double x) {
-    double p0 = _x0 - x;
+    double p0 = _x0! - x;
     double p1 = _x1 - x;
     double p2 = _x2 - x;
-    double p3 = _x3 - x;
+    double p3 = _x3! - x;
 
     double a = p3 - 3.0 * p2 + 3.0 * p1 - p0;
     double b = 3.0 * p2 - 6.0 * p1 + 3.0 * p0;

@@ -1,30 +1,31 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:nima/nima.dart';
-import 'package:nima/nima/math/aabb.dart';
-import 'package:nima/nima/animation/actor_animation.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:nima/nima.dart';
+import 'package:nima/nima/animation/actor_animation.dart';
+import 'package:nima/nima/math/aabb.dart';
 import 'package:nima/nima/math/mat2d.dart';
 import 'package:nima/nima/math/vec2d.dart';
 
-typedef void NimaAnimationCompleted(String name);
+typedef void NimaAnimationCompleted(String? name);
 
 abstract class NimaController {
-  void initialize(FlutterActor actor);
+  void initialize(FlutterActor? actor);
   void setViewTransform(Mat2D viewTransform);
-  void advance(FlutterActor actor, double elapsed);
+  void advance(FlutterActor? actor, double elapsed);
 }
 
 class NimaActor extends LeafRenderObjectWidget {
   final String filename;
-  final BoxFit fit;
+  final BoxFit? fit;
   final Alignment alignment;
-  final String animation;
+  final String? animation;
   final double mixSeconds;
   final bool paused;
-  final NimaAnimationCompleted completed;
-  final NimaController controller;
+  final NimaAnimationCompleted? completed;
+  final NimaController? controller;
   final bool clip;
 
   const NimaActor(this.filename,
@@ -73,29 +74,30 @@ class NimaActor extends LeafRenderObjectWidget {
 }
 
 class NimaAnimationLayer {
-  String name;
-  ActorAnimation animation;
+  String? name;
+  ActorAnimation? animation;
   double time = 0.0;
   double mix = 0.0;
 }
 
 class NimaActorRenderObject extends RenderBox {
-  String _filename;
-  BoxFit _fit;
-  Alignment _alignment;
-  String _animationName;
+  String? _filename;
+  BoxFit? _fit;
+  Alignment? _alignment;
+  String? _animationName;
   double _mixSeconds = 0.2;
-  int _frameCallbackID;
+  int? _frameCallbackID;
   double _lastFrameTime = 0.0;
-  NimaAnimationCompleted _completedCallback;
-  NimaController _controller;
+  NimaAnimationCompleted? _completedCallback;
+  NimaController? _controller;
 
   final List<NimaAnimationLayer> _animationLayers = <NimaAnimationLayer>[];
-  bool _isPlaying;
+  bool? _isPlaying;
 
-  FlutterActor _actor;
-  AABB _setupAABB;
+  FlutterActor? _actor;
+  late AABB _setupAABB;
 
+  @override
   void dispose() {
     _isPlaying = false;
     _updatePlayState();
@@ -115,27 +117,27 @@ class NimaActorRenderObject extends RenderBox {
   }
 
   void _updatePlayState() {
-    if (_isPlaying && attached) {
+    if (_isPlaying! && attached) {
       _frameCallbackID ??=
           SchedulerBinding.instance.scheduleFrameCallback(_beginFrame);
     } else {
       if (_frameCallbackID != null) {
-        SchedulerBinding.instance.cancelFrameCallbackWithId(_frameCallbackID);
+        SchedulerBinding.instance.cancelFrameCallbackWithId(_frameCallbackID!);
         _frameCallbackID = null;
       }
       _lastFrameTime = 0.0;
     }
   }
 
-  NimaAnimationCompleted get completed => _completedCallback;
-  set completed(NimaAnimationCompleted value) {
+  NimaAnimationCompleted? get completed => _completedCallback;
+  set completed(NimaAnimationCompleted? value) {
     if (_completedCallback != value) {
       _completedCallback = value;
     }
   }
 
-  BoxFit get fit => _fit;
-  set fit(BoxFit value) {
+  BoxFit? get fit => _fit;
+  set fit(BoxFit? value) {
     if (value == _fit) {
       return;
     }
@@ -143,8 +145,8 @@ class NimaActorRenderObject extends RenderBox {
     markNeedsPaint();
   }
 
-  bool get isPlaying => _isPlaying;
-  set isPlaying(bool value) {
+  bool? get isPlaying => _isPlaying;
+  set isPlaying(bool? value) {
     if (_isPlaying == value) {
       return;
     }
@@ -162,8 +164,8 @@ class NimaActorRenderObject extends RenderBox {
     markNeedsPaint();
   }
 
-  String get animationName => _animationName;
-  set animationName(String value) {
+  String? get animationName => _animationName;
+  set animationName(String? value) {
     if (_animationName == value) {
       return;
     }
@@ -178,21 +180,21 @@ class NimaActorRenderObject extends RenderBox {
     if (_animationName == null || _actor == null) {
       return;
     }
-    ActorAnimation animation = _actor.getAnimation(_animationName);
+    ActorAnimation? animation = _actor!.getAnimation(_animationName);
     _animationLayers.add(NimaAnimationLayer()
       ..name = _animationName
       ..animation = animation
       ..mix = 0.0);
   }
 
-  NimaController get controller => _controller;
-  set controller(NimaController control) {
+  NimaController? get controller => _controller;
+  set controller(NimaController? control) {
     if (_controller == control) {
       return;
     }
     _controller = control;
     if (_controller != null && _actor != null) {
-      _controller.initialize(_actor);
+      _controller!.initialize(_actor);
     }
   }
 
@@ -204,14 +206,14 @@ class NimaActorRenderObject extends RenderBox {
     _mixSeconds = seconds;
   }
 
-  String get filename => _filename;
-  set filename(String value) {
+  String? get filename => _filename;
+  set filename(String? value) {
     if (_filename == value) {
       return;
     }
     _filename = value;
     if (_actor != null) {
-      _actor.dispose();
+      _actor!.dispose();
       _actor = null;
     }
     if (_filename == null) {
@@ -220,13 +222,13 @@ class NimaActorRenderObject extends RenderBox {
     }
     FlutterActor actor = FlutterActor();
 
-    actor.loadFromBundle(_filename).then((bool success) {
+    actor.loadFromBundle(_filename!).then((bool success) {
       if (success) {
         _actor = actor;
-        _actor.advance(0.0);
-        _setupAABB = _actor.computeAABB();
+        _actor!.advance(0.0);
+        _setupAABB = _actor!.computeAABB();
         if (_controller != null) {
-          _controller.initialize(_actor);
+          _controller!.initialize(_actor);
         }
         _updateAnimation(onlyWhenMissing: true);
         markNeedsPaint();
@@ -234,8 +236,8 @@ class NimaActorRenderObject extends RenderBox {
     });
   }
 
-  Alignment get alignment => _alignment;
-  set alignment(Alignment value) {
+  Alignment? get alignment => _alignment;
+  set alignment(Alignment? value) {
     if (value == _alignment) {
       return;
     }
@@ -267,14 +269,14 @@ class NimaActorRenderObject extends RenderBox {
     double elapsedSeconds = t - _lastFrameTime;
     _lastFrameTime = t;
 
-    if (_advance(elapsedSeconds)) {
+    if (_advance(elapsedSeconds)!) {
       _updatePlayState();
     }
 
     markNeedsPaint();
   }
 
-  bool _advance(double elapsedSeconds) {
+  bool? _advance(double elapsedSeconds) {
     if (_actor == null) {
       return _isPlaying;
     }
@@ -288,18 +290,18 @@ class NimaActorRenderObject extends RenderBox {
       layer.mix += elapsedSeconds;
       layer.time += elapsedSeconds;
 
-      lastMix = _mixSeconds == null || _mixSeconds == 0.0
+      lastMix = _mixSeconds == 0.0
           ? 1.0
           : min(1.0, layer.mix / _mixSeconds);
-      if (layer.animation.isLooping) {
-        layer.time %= layer.animation.duration;
+      if (layer.animation!.isLooping!) {
+        layer.time %= layer.animation!.duration!;
       }
-      layer.animation.apply(layer.time, _actor, lastMix);
+      layer.animation!.apply(layer.time, _actor, lastMix);
       if (lastMix == 1.0) {
         lastFullyMixed = i;
       }
 
-      if (layer.time > layer.animation.duration) {
+      if (layer.time > layer.animation!.duration!) {
         completed.add(layer);
       }
     }
@@ -319,15 +321,15 @@ class NimaActorRenderObject extends RenderBox {
     for (final NimaAnimationLayer animation in completed) {
       _animationLayers.remove(animation);
       if (_completedCallback != null) {
-        _completedCallback(animation.name);
+        _completedCallback!(animation.name);
       }
     }
 
     if (_controller != null) {
-      _controller.advance(_actor, elapsedSeconds);
+      _controller!.advance(_actor, elapsedSeconds);
     }
 
-    _actor.advance(elapsedSeconds);
+    _actor!.advance(elapsedSeconds);
 
     return _isPlaying;
   }
@@ -342,10 +344,10 @@ class NimaActorRenderObject extends RenderBox {
       double contentWidth = bounds[2] - bounds[0];
       double x = -1 * bounds[0] -
           contentWidth / 2.0 -
-          (_alignment.x * contentWidth / 2.0);
+          (_alignment!.x * contentWidth / 2.0);
       double y = -1 * bounds[1] -
           contentHeight / 2.0 +
-          (_alignment.y * contentHeight / 2.0);
+          (_alignment!.y * contentHeight / 2.0);
 
       double scaleX = 1.0, scaleY = 1.0;
 
@@ -390,23 +392,23 @@ class NimaActorRenderObject extends RenderBox {
       if (_controller != null) {
         Mat2D transform = Mat2D();
         transform[4] =
-            offset.dx + size.width / 2.0 + (_alignment.x * size.width / 2.0);
+            offset.dx + size.width / 2.0 + (_alignment!.x * size.width / 2.0);
         transform[5] =
-            offset.dy + size.height / 2.0 + (_alignment.y * size.height / 2.0);
+            offset.dy + size.height / 2.0 + (_alignment!.y * size.height / 2.0);
         Mat2D.scale(transform, transform, Vec2D.fromValues(scaleX, -scaleY));
         Mat2D center = Mat2D();
         center[4] = x;
         center[5] = y;
         Mat2D.multiply(transform, transform, center);
-        _controller.setViewTransform(transform);
+        _controller!.setViewTransform(transform);
       }
 
       canvas.translate(
-          offset.dx + size.width / 2.0 + (_alignment.x * size.width / 2.0),
-          offset.dy + size.height / 2.0 + (_alignment.y * size.height / 2.0));
+          offset.dx + size.width / 2.0 + (_alignment!.x * size.width / 2.0),
+          offset.dy + size.height / 2.0 + (_alignment!.y * size.height / 2.0));
       canvas.scale(scaleX, -scaleY);
       canvas.translate(x, y);
-      _actor.draw(canvas);
+      _actor!.draw(canvas);
       canvas.restore();
     }
   }

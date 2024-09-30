@@ -1,18 +1,18 @@
-import "readers/stream_reader.dart";
 import "actor.dart";
 import "actor_node.dart";
-import "math/vec2d.dart";
 import "math/mat2d.dart";
+import "math/vec2d.dart";
+import "readers/stream_reader.dart";
 
 class ActorBoneBase extends ActorNode {
-  double _length;
-  bool isConnectedToImage;
+  double? _length;
+  bool? isConnectedToImage;
 
-  double get length {
+  double? get length {
     return _length;
   }
 
-  set length(double value) {
+  set length(double? value) {
     if (_length == value) {
       return;
     }
@@ -20,7 +20,7 @@ class ActorBoneBase extends ActorNode {
     if (children == null) {
       return;
     }
-    for (ActorNode node in children) {
+    for (final ActorNode node in children!) {
       if (node is ActorBoneBase) {
         node.x = value;
       }
@@ -29,7 +29,7 @@ class ActorBoneBase extends ActorNode {
 
   Vec2D getTipWorldTranslation(Vec2D vec) {
     Mat2D transform = Mat2D();
-    transform[4] = _length;
+    transform[4] = _length!;
     Mat2D.multiply(transform, worldTransform, transform);
     vec[0] = transform[4];
     vec[1] = transform[5];

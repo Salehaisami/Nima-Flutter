@@ -3,31 +3,31 @@ import "actor_node.dart";
 import "readers/stream_reader.dart";
 
 abstract class ActorComponent {
-  String _name = "Unnamed";
-  ActorNode parent;
-  Actor actor;
+  String? _name = "Unnamed";
+  ActorNode? parent;
+  Actor? actor;
   int _parentIdx = 0;
   int idx = 0;
   int graphOrder = 0;
   int dirtMask = 0;
-  List<ActorComponent> dependents;
+  List<ActorComponent?>? dependents;
 
   ActorComponent();
   ActorComponent.withActor(this.actor);
 
-  String get name {
+  String? get name {
     return _name;
   }
 
-  void resolveComponentIndices(List<ActorComponent> components) {
-    ActorNode node = components[_parentIdx] as ActorNode;
+  void resolveComponentIndices(List<ActorComponent?> components) {
+    ActorNode? node = components[_parentIdx] as ActorNode?;
     if (node != null) {
       if (this is ActorNode) {
         node.addChild(this as ActorNode);
       } else {
         parent = node;
       }
-      actor.addDependency(this, node);
+      actor!.addDependency(this, node);
     }
   }
 

@@ -13,12 +13,12 @@ class DistanceMode {
 
 class ActorDistanceConstraint extends ActorTargetedConstraint {
   double _distance = 100.0;
-  int _mode = DistanceMode.Closer;
+  int? _mode = DistanceMode.Closer;
 
   ActorDistanceConstraint() : super();
 
-  static ActorDistanceConstraint read(
-      Actor actor, StreamReader reader, ActorDistanceConstraint component) {
+  static ActorDistanceConstraint? read(
+      Actor actor, StreamReader reader, ActorDistanceConstraint? component) {
     component ??= ActorDistanceConstraint();
     ActorTargetedConstraint.read(actor, reader, component);
 
@@ -43,12 +43,12 @@ class ActorDistanceConstraint extends ActorTargetedConstraint {
 
   @override
   void constrain(ActorNode node) {
-    ActorNode t = target as ActorNode;
+    ActorNode? t = target as ActorNode?;
     if (t == null) {
       return;
     }
 
-    ActorNode p = parent;
+    ActorNode p = parent!;
     Vec2D targetTranslation = t.getWorldTranslation(Vec2D());
     Vec2D ourTranslation = p.getWorldTranslation(Vec2D());
 
@@ -77,7 +77,7 @@ class ActorDistanceConstraint extends ActorTargetedConstraint {
 
     Mat2D world = p.worldTransform;
     Vec2D position = Vec2D.lerp(Vec2D(), ourTranslation,
-        Vec2D.add(Vec2D(), targetTranslation, toTarget), strength);
+        Vec2D.add(Vec2D(), targetTranslation, toTarget), strength!);
     world[4] = position[0];
     world[5] = position[1];
   }
@@ -88,7 +88,7 @@ class ActorDistanceConstraint extends ActorTargetedConstraint {
   void completeResolve() {}
 
   double get distance => _distance;
-  int get mode => _mode;
+  int? get mode => _mode;
 
   set distance(double d) {
     if (_distance != d) {
@@ -97,7 +97,7 @@ class ActorDistanceConstraint extends ActorTargetedConstraint {
     }
   }
 
-  set mode(int m) {
+  set mode(int? m) {
     if (_mode != m) {
       _mode = m;
       markDirty();

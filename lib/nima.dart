@@ -10,12 +10,12 @@ import "nima/math/aabb.dart";
 typedef void DrawCallback(ui.Canvas canvas);
 
 class FlutterActorImage extends ActorImage {
-  Float32List _vertexBuffer;
-  Float32List _uvBuffer;
-  ui.Paint _paint;
-  ui.Vertices _canvasVertices;
-  Uint16List _indices;
-  DrawCallback onDraw;
+  Float32List? _vertexBuffer;
+  Float32List? _uvBuffer;
+  ui.Paint? _paint;
+  ui.Vertices? _canvasVertices;
+  Uint16List? _indices;
+  DrawCallback? onDraw;
 
   final Float64List _identityMatrix = Float64List.fromList(<double>[
     1.0,
@@ -36,13 +36,13 @@ class FlutterActorImage extends ActorImage {
     1.0
   ]);
 
-  set textureIndex(int value) {
+  set textureIndex(int? value) {
     if (textureIndex != value) {
       _paint = ui.Paint()
-        ..shader = ui.ImageShader((actor as FlutterActor).images[textureIndex],
+        ..shader = ui.ImageShader((actor as FlutterActor).images![textureIndex!]!,
             ui.TileMode.clamp, ui.TileMode.clamp, _identityMatrix);
-      _paint.filterQuality = ui.FilterQuality.low;
-      _paint.isAntiAlias = true;
+      _paint!.filterQuality = ui.FilterQuality.low;
+      _paint!.isAntiAlias = true;
     }
   }
 
@@ -60,32 +60,32 @@ class FlutterActorImage extends ActorImage {
     _vertexBuffer = makeVertexPositionBuffer();
     _uvBuffer = makeVertexUVBuffer();
     _indices =
-        Uint16List.fromList(triangles); // nima runtime loads 16 bit indices
+        Uint16List.fromList(triangles!); // nima runtime loads 16 bit indices
     updateVertexUVBuffer(_uvBuffer);
     int count = vertexCount;
     int idx = 0;
-    ui.Image image = (actor as FlutterActor).images[textureIndex];
+    ui.Image? image = (actor as FlutterActor).images![textureIndex!];
 
     // SKIA requires texture coordinates in full image space, 
 	// not traditional normalized uv coordinates.
     for (int i = 0; i < count; i++) {
-      _uvBuffer[idx] = _uvBuffer[idx] * image.width;
-      _uvBuffer[idx + 1] = _uvBuffer[idx + 1] * image.height;
+      _uvBuffer![idx] = _uvBuffer![idx] * image!.width;
+      _uvBuffer![idx + 1] = _uvBuffer![idx + 1] * image.height;
       idx += 2;
     }
 
     if (sequenceUVs != null) {
-      for (int i = 0; i < sequenceUVs.length; i++) {
-        sequenceUVs[i++] *= image.width;
-        sequenceUVs[i] *= image.height;
+      for (int i = 0; i < sequenceUVs!.length; i++) {
+        sequenceUVs![i++] *= image!.width;
+        sequenceUVs![i] *= image.height;
       }
     }
 
     _paint = ui.Paint()
-      ..shader = ui.ImageShader((actor as FlutterActor).images[textureIndex],
+      ..shader = ui.ImageShader((actor as FlutterActor).images![textureIndex!]!,
           ui.TileMode.clamp, ui.TileMode.clamp, _identityMatrix);
-    _paint.filterQuality = ui.FilterQuality.low;
-    _paint.isAntiAlias = true;
+    _paint!.filterQuality = ui.FilterQuality.low;
+    _paint!.isAntiAlias = true;
   }
 
   void updateVertices() {
@@ -100,20 +100,20 @@ class FlutterActorImage extends ActorImage {
     //int uvOffset;
 
     if (sequenceUVs != null) {
-      int framesCount = sequenceFrames.length;
+      int framesCount = sequenceFrames!.length;
       int currentFrame = sequenceFrame % framesCount;
 
-      SequenceFrame sf = sequenceFrames[currentFrame];
+      SequenceFrame sf = sequenceFrames![currentFrame];
       //uvOffset = sf.offset;
       textureIndex = sf.atlasIndex;
 
       int uvStride = 8;
       int uvRow = currentFrame * uvStride;
-      Iterable<double> it = sequenceUVs.getRange(uvRow, uvRow + uvStride);
+      Iterable<double> it = sequenceUVs!.getRange(uvRow, uvRow + uvStride);
       List<double> uvList = List.from(it);
       _uvBuffer = Float32List.fromList(uvList);
     }
-    _canvasVertices = ui.Vertices.raw(ui.VertexMode.triangles, _vertexBuffer,
+    _canvasVertices = ui.Vertices.raw(ui.VertexMode.triangles, _vertexBuffer!,
         indices: _indices, textureCoordinates: _uvBuffer);
   }
 
@@ -124,11 +124,11 @@ class FlutterActorImage extends ActorImage {
         _canvasVertices == null) {
       return;
     }
-    _paint.color = _paint.color.withOpacity(renderOpacity * opacity);
-    _paint.isAntiAlias = true;
-    canvas.drawVertices(_canvasVertices, ui.BlendMode.srcOver, _paint);
+    _paint!.color = _paint!.color.withOpacity(renderOpacity * opacity);
+    _paint!.isAntiAlias = true;
+    canvas.drawVertices(_canvasVertices!, ui.BlendMode.srcOver, _paint!);
     if (onDraw != null) {
-      onDraw(canvas);
+      onDraw!(canvas);
     }
   }
 
@@ -149,11 +149,11 @@ class FlutterActorImage extends ActorImage {
 
     int readIdx = 0;
     if (_vertexBuffer != null) {
-      int nv = _vertexBuffer.length ~/ 2;
+      int nv = _vertexBuffer!.length ~/ 2;
 
       for (int i = 0; i < nv; i++) {
-        double x = _vertexBuffer[readIdx++];
-        double y = _vertexBuffer[readIdx++];
+        double x = _vertexBuffer![readIdx++];
+        double y = _vertexBuffer![readIdx++];
         if (x < minX) {
           minX = x;
         }
@@ -175,9 +175,9 @@ class FlutterActorImage extends ActorImage {
 
 class FlutterActor extends Actor {
   bool _isInstance = false;
-  List<ui.Image> _images;
+  List<ui.Image?>? _images;
 
-  List<ui.Image> get images {
+  List<ui.Image?>? get images {
     return _images;
   }
 
@@ -191,9 +191,9 @@ class FlutterActor extends Actor {
     super.load(data);
 
     List<Future<ui.Codec>> waitList = <Future<ui.Codec>>[];
-    _images = List<ui.Image>(texturesUsed);
+    _images = List<ui.Image?>.filled(texturesUsed, null);
 
-    List atlases = this.atlases;
+    List? atlases = this.atlases;
     bool isOOB =
         atlases != null && atlases.isNotEmpty && atlases.first is String;
 
@@ -235,10 +235,10 @@ class FlutterActor extends Actor {
     List<ui.FrameInfo> frames =
         await Future.wait(codecs.map((codec) => codec.getNextFrame()));
     for (int i = 0; i < frames.length; i++) {
-      _images[i] = frames[i].image;
+      _images![i] = frames[i].image;
     }
 
-    for (final ActorImage image in imageNodes) {
+    for (final ActorImage? image in imageNodes!) {
       if (image is FlutterActorImage) {
         image.init();
       }
@@ -251,7 +251,7 @@ class FlutterActor extends Actor {
   void advance(double seconds) {
     super.advance(seconds);
 
-    for (final ActorImage image in imageNodes) {
+    for (final ActorImage? image in imageNodes!) {
       if (image is FlutterActorImage) {
         image.updateVertices();
       }
@@ -260,7 +260,7 @@ class FlutterActor extends Actor {
 
   void draw(ui.Canvas canvas, [double opacity = 1.0]) {
     // N.B. imageNodes are sorted as necessary by Actor.
-    for (final ActorImage image in imageNodes) {
+    for (final ActorImage? image in imageNodes!) {
       if (image is FlutterActorImage) {
         image.draw(canvas, opacity);
       }
@@ -303,7 +303,7 @@ class FlutterActor extends Actor {
   }
 
   void dispose() {
-    for (final ActorImage img in imageNodes) {
+    for (final ActorImage? img in imageNodes!) {
       if (img is FlutterActorImage) {
         img.dispose();
         if (!_isInstance) {
@@ -318,7 +318,7 @@ class FlutterActor extends Actor {
     actorInstance.copyActor(this);
     actorInstance.isInstance = true;
     actorInstance._images = _images;
-    for (final ActorImage img in actorInstance.imageNodes) {
+    for (final ActorImage? img in actorInstance.imageNodes!) {
       if (img is FlutterActorImage) {
         img.init();
       }
@@ -332,14 +332,11 @@ class FlutterActor extends Actor {
     double maxX = double.negativeInfinity;
     double maxY = double.negativeInfinity;
 
-    for (final ActorImage image in imageNodes) {
+    for (final ActorImage? image in imageNodes!) {
       if (image is FlutterActorImage) {
         if (image.opacity < 0.01) continue;
 
         AABB aabb = image.computeAABB();
-        if (aabb == null) {
-          continue;
-        }
 
         if (aabb[0] < minX) {
           minX = aabb[0];
